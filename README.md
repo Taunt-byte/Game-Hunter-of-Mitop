@@ -1,10 +1,16 @@
-# Game
- Agora vai confia 
+# Hunter of Mitop
+
+Status: Em desenvolvimento
+
+# Instalação
+
+    pip install pygame
 
 ## Grafico
 
 - 16 bits
 
-## Como rodar
+## Como Jogar
 
-Rodar main.py
+Rodar o arquivo main.py
+
