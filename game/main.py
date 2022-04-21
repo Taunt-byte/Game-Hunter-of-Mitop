@@ -1,17 +1,13 @@
-import pygame
+import pyxel
 
-## Janela setup
-WIDTH, HEIGHT = 900,500
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+pyxel.init(160, 120)
 
-def main():
-    run = True
-    while run:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-    
-    pygame.quit()
+def update():
+    if pyxel.btnp(pyxel.KEY_Q):
+        pyxel.quit()
 
-if __name__ == '__main__':
-    main()
+def draw():
+    pyxel.cls(0)
+    pyxel.rect(10, 10, 20, 20, 11)
+
+pyxel.run(update, draw)

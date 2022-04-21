@@ -4,7 +4,7 @@
 
  Nome: Ana Julia. 
  Idade: 15 anos.
- Habilidade: Dash duplo.
+ Habilidade: Tiro duplo.
  Sexo: feminino.
 
 ## Principal 2

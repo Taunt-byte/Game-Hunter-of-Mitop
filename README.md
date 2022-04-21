@@ -4,7 +4,7 @@ Status: Em desenvolvimento
 
 # Instalação
 
-    pip install pygame
+    pip install -U pyxel
 
 ## Grafico
 
@@ -13,4 +13,3 @@ Status: Em desenvolvimento
 ## Como Jogar
 
 Rodar o arquivo main.py
-
