@@ -1,4 +1,4 @@
-# Hunter of Mitop
+# As aventuras de Jake o gato robô
 
 Status: Em desenvolvimento
 
@@ -13,3 +13,7 @@ Status: Em desenvolvimento
 ## Como Jogar
 
 Rodar o arquivo main.py
+
+## Descrição
+
+Jogo de ação e aventura no mesmo estilo de clássicos como megamen e contra feito na unreal engine.
