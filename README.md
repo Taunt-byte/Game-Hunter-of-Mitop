@@ -16,4 +16,4 @@ Rodar o arquivo main.py
 
 ## Descrição
 
-Jogo de ação e aventura no mesmo estilo de clássicos como megamen e contra feito na unreal engine.
+Jogo de ação e aventura no mesmo estilo de clássicos como megamen e contra feito.
