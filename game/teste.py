@@ -3,136 +3,225 @@ import pyxel
 
 class App:
     def __init__(self):
-        pyxel.init(160, 120, title="Pyxel Jump")
-        pyxel.load("assets/jump_game.pyxres")
+        # Janela do jogo
+        pyxel.init(160, 120, title="Pyxel Space Shooter")
+
+        # Carrega seu arquivo de recursos (sprites/som/musica)
+        pyxel.load("assets/recurso-mitop.pyxres")
+
+        # -------------------------
+        # Estado do jogador (nave)
+        # -------------------------
+        self.px = pyxel.width // 2 - 8
+        self.py = pyxel.height - 20
+        self.pspeed = 2
+        self.lives = 3
+        self.invincible_timer = 0  # tempo de invencibilidade após hit
+
+        # -------------------------
+        # Tiros do jogador
+        # Cada tiro = [x, y]
+        # -------------------------
+        self.bullets = []
+        self.bullet_speed = 4
+        self.shoot_cooldown = 0  # trava de tiro
+
+        # -------------------------
+        # Inimigos
+        # Cada inimigo = [x, y, hp]
+        # -------------------------
+        self.enemies = []
+        self.enemy_speed = 1
+        self.spawn_timer = 0
+
+        # -------------------------
+        # Fundo (estrelas)
+        # Cada estrela = [x, y, speed]
+        # -------------------------
+        self.stars = []
+        for _ in range(40):
+            self.stars.append([pyxel.rndi(0, pyxel.width - 1),
+                               pyxel.rndi(0, pyxel.height - 1),
+                               pyxel.rndi(1, 3)])
+
+        # Pontuação
         self.score = 0
-        self.player_x = 72
-        self.player_y = -16
-        self.player_dy = 0
-        self.is_alive = True
-        self.far_cloud = [(-10, 75), (40, 65), (90, 60)]
-        self.near_cloud = [(10, 25), (70, 35), (120, 15)]
-        self.floor = [(i * 60, pyxel.rndi(8, 104), True) for i in range(4)]
-        self.fruit = [
-            (i * 60, pyxel.rndi(0, 104), pyxel.rndi(0, 2), True) for i in range(4)
-        ]
-        pyxel.playm(0, loop=True)
+
+        # Estado do jogo
+        self.game_over = False
+
+        # Música (se você tiver)
+        # pyxel.playm(0, loop=True)
+
         pyxel.run(self.update, self.draw)
 
+    # -------------------------
+    # UPDATE: lógica do jogo
+    # -------------------------
     def update(self):
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
 
+        # Reiniciar no game over
+        if self.game_over:
+            if pyxel.btnp(pyxel.KEY_R):
+                self.__init__()
+            return
+
+        self.update_background()
         self.update_player()
-        for i, v in enumerate(self.floor):
-            self.floor[i] = self.update_floor(*v)
-        for i, v in enumerate(self.fruit):
-            self.fruit[i] = self.update_fruit(*v)
+        self.update_bullets()
+        self.update_enemies()
+        self.check_collisions()
 
+    # Fundo com estrelas descendo
+    def update_background(self):
+        for s in self.stars:
+            s[1] += s[2]
+            if s[1] >= pyxel.height:
+                s[0] = pyxel.rndi(0, pyxel.width - 1)
+                s[1] = 0
+                s[2] = pyxel.rndi(1, 3)
+
+    # Jogador: movimento + tiro
     def update_player(self):
+        # Movimento livre (4 direções)
         if pyxel.btn(pyxel.KEY_LEFT) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT):
-            self.player_x = max(self.player_x - 2, 0)
+            self.px = max(self.px - self.pspeed, 0)
         if pyxel.btn(pyxel.KEY_RIGHT) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT):
-            self.player_x = min(self.player_x + 2, pyxel.width - 16)
-        self.player_y += self.player_dy
-        self.player_dy = min(self.player_dy + 1, 8)
+            self.px = min(self.px + self.pspeed, pyxel.width - 16)
+        if pyxel.btn(pyxel.KEY_UP) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_UP):
+            self.py = max(self.py - self.pspeed, 0)
+        if pyxel.btn(pyxel.KEY_DOWN) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN):
+            self.py = min(self.py + self.pspeed, pyxel.height - 16)
 
-        if self.player_y > pyxel.height:
-            if self.is_alive:
-                self.is_alive = False
-                pyxel.play(3, 5)
-            if self.player_y > 600:
-                self.score = 0
-                self.player_x = 72
-                self.player_y = -16
-                self.player_dy = 0
-                self.is_alive = True
+        # Cooldowns
+        if self.shoot_cooldown > 0:
+            self.shoot_cooldown -= 1
+        if self.invincible_timer > 0:
+            self.invincible_timer -= 1
 
-    def update_floor(self, x, y, is_alive):
-        if is_alive:
-            if (
-                self.player_x + 16 >= x
-                and self.player_x <= x + 40
-                and self.player_y + 16 >= y
-                and self.player_y <= y + 8
-                and self.player_dy > 0
-            ):
-                is_alive = False
-                self.score += 10
-                self.player_dy = -12
-                pyxel.play(3, 3)
-        else:
-            y += 6
-        x -= 4
-        if x < -40:
-            x += 240
-            y = pyxel.rndi(8, 104)
-            is_alive = True
-        return x, y, is_alive
+        # Tiro (SPACE) com cadência
+        if pyxel.btn(pyxel.KEY_SPACE) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_A):
+            if self.shoot_cooldown == 0:
+                # Tiro nasce no "nariz" da nave
+                bx = self.px + 7
+                by = self.py - 2
+                self.bullets.append([bx, by])
+                self.shoot_cooldown = 8  # quanto menor, mais metralhadora
+                # pyxel.play(3, 0)  # ajuste seu som
 
-    def update_fruit(self, x, y, kind, is_alive):
-        if is_alive and abs(x - self.player_x) < 12 and abs(y - self.player_y) < 12:
-            is_alive = False
-            self.score += (kind + 1) * 100
-            self.player_dy = min(self.player_dy, -8)
-            pyxel.play(3, 4)
-        x -= 2
-        if x < -40:
-            x += 240
-            y = pyxel.rndi(0, 104)
-            kind = pyxel.rndi(0, 2)
-            is_alive = True
-        return (x, y, kind, is_alive)
+    # Atualiza tiros
+    def update_bullets(self):
+        for b in self.bullets:
+            b[1] -= self.bullet_speed
 
-    def draw(self):
-        pyxel.cls(12)
+        # Remove tiros fora da tela
+        self.bullets = [b for b in self.bullets if b[1] > -8]
 
-        # Draw sky
-        pyxel.blt(0, 88, 0, 0, 88, 160, 32)
+    # Spawn e movimento dos inimigos
+    def update_enemies(self):
+        # Spawn controlado por timer
+        self.spawn_timer += 1
+        if self.spawn_timer >= 30:  # a cada 30 frames
+            self.spawn_timer = 0
+            ex = pyxel.rndi(0, pyxel.width - 16)
+            ey = -16
+            hp = 1
+            self.enemies.append([ex, ey, hp])
 
-        # Draw mountain
-        pyxel.blt(0, 88, 0, 0, 64, 160, 24, 12)
+        # Movimento dos inimigos
+        for e in self.enemies:
+            e[1] += self.enemy_speed
 
-        # Draw trees
-        offset = pyxel.frame_count % 160
-        for i in range(2):
-            pyxel.blt(i * 160 - offset, 104, 0, 0, 48, 160, 16, 12)
+        # Remove inimigos que passaram da tela
+        self.enemies = [e for e in self.enemies if e[1] < pyxel.height + 20]
 
-        # Draw clouds
-        offset = (pyxel.frame_count // 16) % 160
-        for i in range(2):
-            for x, y in self.far_cloud:
-                pyxel.blt(x + i * 160 - offset, y, 0, 64, 32, 32, 8, 12)
-        offset = (pyxel.frame_count // 8) % 160
-        for i in range(2):
-            for x, y in self.near_cloud:
-                pyxel.blt(x + i * 160 - offset, y, 0, 0, 32, 56, 8, 12)
+    # Colisões: tiro-inimigo e inimigo-player
+    def check_collisions(self):
+        # --- Tiro x inimigo ---
+        remaining_bullets = []
+        for b in self.bullets:
+            hit = False
+            for e in self.enemies:
+                if self.aabb(b[0], b[1], 2, 6, e[0], e[1], 16, 16):
+                    e[2] -= 1
+                    hit = True
+                    # pyxel.play(3, 1)  # som hit
+                    if e[2] <= 0:
+                        self.score += 100
+                        # pyxel.play(3, 2)  # som explode
+                    break
+            if not hit:
+                remaining_bullets.append(b)
+        self.bullets = remaining_bullets
 
-        # Draw floors
-        for x, y, is_alive in self.floor:
-            pyxel.blt(x, y, 0, 0, 16, 40, 8, 12)
+        # Remove inimigos mortos
+        self.enemies = [e for e in self.enemies if e[2] > 0]
 
-        # Draw fruits
-        for x, y, kind, is_alive in self.fruit:
-            if is_alive:
-                pyxel.blt(x, y, 0, 32 + kind * 16, 0, 16, 16, 12)
+        # --- Inimigo x player ---
+        if self.invincible_timer == 0:
+            for e in self.enemies:
+                if self.aabb(self.px, self.py, 16, 16, e[0], e[1], 16, 16):
+                    self.lives -= 1
+                    self.invincible_timer = 60  # 1 segundo de invencibilidade (~60fps)
+                    # pyxel.play(3, 5)  # som dano
 
-        # Draw player
-        pyxel.blt(
-            self.player_x,
-            self.player_y,
-            0,
-            16 if self.player_dy > 0 else 0,
-            0,
-            16,
-            16,
-            12,
+                    # Empurra inimigo pra fora (ou remove)
+                    e[2] = 0
+
+                    if self.lives <= 0:
+                        self.game_over = True
+                    break
+
+    # Função de colisão retângulo x retângulo (AABB)
+    def aabb(self, ax, ay, aw, ah, bx, by, bw, bh):
+        return (
+            ax < bx + bw and
+            ax + aw > bx and
+            ay < by + bh and
+            ay + ah > by
         )
 
-        # Draw score
-        s = f"SCORE {self.score:>4}"
-        pyxel.text(5, 4, s, 1)
-        pyxel.text(4, 4, s, 7)
+    # -------------------------
+    # DRAW: renderização
+    # -------------------------
+    def draw(self):
+        pyxel.cls(0)  # preto
+
+        # Desenha estrelas
+        for x, y, spd in self.stars:
+            pyxel.pset(x, y, 7 if spd == 1 else 6)  # brilho varia pelo speed
+
+        # HUD
+        pyxel.text(5, 5, f"SCORE {self.score:05d}", 7)
+        pyxel.text(5, 15, f"LIVES {self.lives}", 7)
+
+        # Game over
+        if self.game_over:
+            pyxel.text(50, 55, "GAME OVER", 8)
+            pyxel.text(38, 65, "Press R to restart", 7)
+            return
+
+        # Desenha inimigos
+        for ex, ey, hp in self.enemies:
+            # Se você tiver sprite de inimigo no banco:
+            # pyxel.blt(ex, ey, 0, u, v, 16, 16, colkey)
+            # Placeholder (quadrado)
+            pyxel.rect(ex, ey, 16, 16, 8)
+
+        # Desenha tiros
+        for bx, by in self.bullets:
+            pyxel.rect(bx, by, 2, 6, 10)
+
+        # Desenha player (pisca quando invencível)
+        if self.invincible_timer > 0 and (pyxel.frame_count // 4) % 2 == 0:
+            return  # não desenha em alguns frames (efeito piscando)
+
+        # Se você tiver sprite de nave no banco:
+        # pyxel.blt(self.px, self.py, 0, u, v, 16, 16, colkey)
+        # Placeholder (triângulo/nave simples)
+        pyxel.tri(self.px + 8, self.py, self.px, self.py + 16, self.px + 16, self.py + 16, 11)
 
 
 App()

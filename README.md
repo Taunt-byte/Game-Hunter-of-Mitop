@@ -10,6 +10,9 @@ Status: Em desenvolvimento
 
 - 16 bits
 
+## Foto do jogo
+![alt text](image.png)
+
 ## Como Jogar
 
 Rodar o arquivo main.py
