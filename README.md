@@ -39,7 +39,7 @@ python main.py
 
 ## 🕹️ Como jogar
 
-* Controle sua nave
+* Controle sua nave usando as setas do teclado.
 * Desvie de inimigos e projéteis
 * Tente sobreviver o máximo possível (sim, essa é a parte “divertida” e cruel do jogo)
 
