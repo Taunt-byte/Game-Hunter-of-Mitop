@@ -1,7 +1,3 @@
-Seu README parece aquele bilhete escrito às pressas antes da prova. Dá pra deixar bem mais apresentável sem esforço absurdo. Tome aqui uma versão arrumada, organizada e com cara de projeto de verdade:
-
----
-
 # 🚀 Hunter of Mythop
 
 Jogo de nave estilo **space shooter** desenvolvido em Python com Pyxel.
