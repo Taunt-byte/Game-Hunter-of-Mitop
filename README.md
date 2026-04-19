@@ -1,22 +1,69 @@
-# As aventuras de Jake o gato robô
+Seu README parece aquele bilhete escrito às pressas antes da prova. Dá pra deixar bem mais apresentável sem esforço absurdo. Tome aqui uma versão arrumada, organizada e com cara de projeto de verdade:
 
-Status: Em desenvolvimento
+---
 
-# Instalação
+# 🚀 Hunter of Mythop
 
-    pip install -U pyxel
+Jogo de nave estilo **space shooter** desenvolvido em Python com Pyxel.
 
-## Grafico
+---
 
-- 16 bits
+## 🎮 Sobre o projeto
 
-## Foto do jogo
-![alt text](image.png)
+**Hunter of Mythop** é um jogo 2D de nave espacial onde o jogador enfrenta inimigos em um ambiente retrô inspirado em gráficos 16-bit.
 
-## Como Jogar
+---
 
-Rodar o arquivo main.py
+## 🧰 Tecnologias utilizadas
 
-## Descrição
+* Python 🐍
+* Pyxel (engine retrô 2D)
 
-Jogo de ação e aventura no mesmo estilo de clássicos como megamen e contra feito.
+---
+
+## 📦 Instalação
+
+Antes de rodar o jogo, instale a dependência:
+
+```bash
+pip install -U pyxel
+```
+
+---
+
+## ▶️ Como executar
+
+Execute o arquivo principal:
+
+```bash
+python main.py
+```
+
+---
+
+## 🕹️ Como jogar
+
+* Controle sua nave
+* Desvie de inimigos e projéteis
+* Tente sobreviver o máximo possível (sim, essa é a parte “divertida” e cruel do jogo)
+
+---
+
+## 🎨 Gráficos
+
+* Estilo retrô 16-bit
+
+---
+
+## 📸 Demonstração
+
+![Gameplay](image.png)
+
+🎥 Vídeo de demonstração:
+[https://youtu.be/On9rmclIRZE](https://youtu.be/On9rmclIRZE)
+
+---
+
+## 📌 Descrição
+
+Jogo de **space shooter** desenvolvido para fins de aprendizado, focado em lógica de jogos, manipulação de sprites e uso da biblioteca Pyxel.
